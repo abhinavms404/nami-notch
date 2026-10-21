@@ -4,6 +4,10 @@ A tiny Wayland/Hyprland notch with live system stats and an interactive canvas p
 
 Nami hides at the top center of your screen until you hover it. Hovering reveals a compact stats pill; double-clicking the pill opens the full card with the pet, CPU, RAM, temperature, battery, model selector, and outfit controls.
 
+<p align="center">
+  <img src="docs/hero.png" alt="Expanded Nami Notch card showing the penguin pet, live CPU, RAM, temperature and battery stats, species selector and outfit controls" width="640">
+</p>
+
 ## Features
 
 - Live CPU, RAM, CPU temperature, and battery readings.
@@ -16,6 +20,26 @@ Nami hides at the top center of your screen until you hover it. Hovering reveals
 - Persistent red low-battery warning.
 - Low-power and idle animations, dancing, eye tracking, outfits, and particles.
 - No network requests; settings and readings stay local.
+
+## Screenshots
+
+### Compact notch
+
+<p align="center">
+  <img src="docs/compact.png" alt="Compact Nami Notch stats pill" width="640">
+</p>
+
+### Charging
+
+<p align="center">
+  <img src="docs/charging.png" alt="Nami Notch charging with heart eyes, floating hearts and a green charging status" width="640">
+</p>
+
+### Charger disconnected
+
+<p align="center">
+  <img src="docs/disconnect.png" alt="Nami Notch angry red disconnect alert with the message Charger disconnected" width="640">
+</p>
 
 ## Requirements
 
