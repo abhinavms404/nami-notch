@@ -41,6 +41,12 @@ Nami hides at the top center of your screen until you hover it. Hovering reveals
   <img src="docs/disconnect.png" alt="Nami Notch angry red disconnect alert with the message Charger disconnected" width="640">
 </p>
 
+### Low battery
+
+<p align="center">
+  <img src="docs/low-battery.png" alt="Nami Notch angry low battery warning at 8 percent with the message Charge it now" width="640">
+</p>
+
 ## Requirements
 
 - Linux with a Wayland compositor that supports `wlr-layer-shell` (tested on Hyprland).
