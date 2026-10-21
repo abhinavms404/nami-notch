@@ -47,6 +47,14 @@ Nami hides at the top center of your screen until you hover it. Hovering reveals
   <img src="docs/low-battery.png" alt="Nami Notch angry low battery warning at 8 percent with the message Charge it now" width="640">
 </p>
 
+### More models
+
+Choose any species from the dots in the notch. A few of them:
+
+| Puppy | Fox | Panda |
+| :---: | :---: | :---: |
+| <img src="docs/model-puppy.png" width="190" alt="Puppy model wearing a bow"> | <img src="docs/model-fox.png" width="190" alt="Fox model wearing a bow"> | <img src="docs/model-panda.png" width="190" alt="Panda model wearing a bow"> |
+
 ## Requirements
 
 - Linux with a Wayland compositor that supports `wlr-layer-shell` (tested on Hyprland).
