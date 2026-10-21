@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nami</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div id="stage">
+      <div id="notch">
+        <div id="compact">
+          <div id="clock">--:--</div>
+          <span class="sep"></span>
+          <div class="metric"><span class="dim">CPU</span><span id="cpu">---%</span></div>
+          <span class="sep"></span>
+          <div class="metric"><span class="dim">RAM</span><span id="ram">--G</span></div>
+          <span class="sep"></span>
+          <div class="metric"><span id="temp">--°C</span></div>
+          <span class="sep"></span>
+          <div class="metric"><span id="bat">--%</span></div>
+          <div id="bolt" class="bolt"></div>
+        </div>
+
+        <div id="content">
+          <div id="pet-big" class="pet-slot big"><canvas id="pet"></canvas></div>
+          <div id="info">
+            <div class="head">
+              <div id="date">--</div>
+              <div id="status" class="status"></div>
+            </div>
+            <div class="bigstats">
+              <span><span class="dim">CPU</span><b id="big-cpu">---%</b></span>
+              <span><span class="dim">RAM</span><b id="big-ram">--G</b></span>
+              <span><span class="dim">TEMP</span><b id="big-temp">--°C</b></span>
+              <span><span class="dim">BAT</span><b id="big-bat">--%</b></span>
+            </div>
+            <div class="selector">
+              <div id="models"></div>
+              <span id="model-label">Nami</span>
+            </div>
+            <div class="outfitrow">
+              <button id="outfit-prev" class="chip" aria-label="Previous outfit">‹</button>
+              <span id="outfit-label">Auto</span>
+              <button id="outfit-next" class="chip" aria-label="Next outfit">›</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

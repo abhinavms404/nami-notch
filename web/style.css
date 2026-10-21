@@ -1,0 +1,299 @@
+:root {
+  color-scheme: dark;
+  font-family: "Inter", "Cantarell", "Noto Sans", sans-serif;
+}
+
+html,
+body {
+  margin: 0;
+  width: 640px;
+  height: 180px;
+  overflow: hidden;
+  background: transparent;
+  user-select: none;
+}
+
+#stage {
+  position: relative;
+  width: 640px;
+  height: 180px;
+  background: transparent;
+}
+
+#notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 300px;
+  height: 30px;
+  transform: translateX(-50%) translateY(-6px);
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(8, 9, 12, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 0;
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition:
+    width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    height 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-radius 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.14s ease,
+    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+#notch.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+#notch.expanded {
+  width: 400px;
+  height: 130px;
+  border-radius: 0 0 20px 20px;
+}
+
+#compact {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  white-space: nowrap;
+  transition: opacity 0.12s ease;
+}
+
+#notch.expanded #compact {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pet-slot.big {
+  width: 88px;
+  height: 88px;
+  flex: 0 0 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+#pet {
+  display: block;
+  width: 88px;
+  height: 88px;
+  cursor: pointer;
+}
+
+#clock {
+  min-width: 38px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1px;
+}
+
+.sep {
+  width: 1px;
+  height: 11px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.metric {
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.dim {
+  margin-right: 3px;
+  color: rgba(255, 255, 255, 0.42);
+  font-weight: 600;
+}
+
+.warn {
+  color: #fbbf24;
+}
+
+.crit {
+  color: #f87171;
+}
+
+.bolt {
+  width: 7px;
+  height: 11px;
+  flex: 0 0 7px;
+  opacity: 0;
+  background: #4ade80;
+  clip-path: polygon(55% 0, 0 58%, 42% 58%, 25% 100%, 100% 38%, 58% 38%);
+  transform: scale(0.75);
+  transition: opacity 0.2s ease;
+}
+
+.bolt.on {
+  opacity: 1;
+}
+
+#content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease;
+}
+
+#notch.expanded #content {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+#date {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status {
+  max-width: 230px;
+  overflow: hidden;
+  color: transparent;
+  font-size: 9px;
+  font-weight: 700;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status.low {
+  color: #f87171;
+}
+
+.status.charging {
+  color: #4ade80;
+}
+
+.bigstats {
+  display: flex;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bigstats b {
+  font-weight: 650;
+}
+
+.selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 16px;
+}
+
+#models {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: 0 0 auto;
+}
+
+.model {
+  box-sizing: border-box;
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  outline: 0;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+}
+
+.model.on {
+  border-color: rgba(255, 255, 255, 0.95);
+}
+
+#model-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 9px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.outfitrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.chip {
+  width: 18px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  outline: 0;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.06);
+  font: inherit;
+  line-height: 14px;
+  cursor: pointer;
+}
+
+.chip:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+#outfit-label {
+  min-width: 82px;
+  max-width: 130px;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.65);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#notch.low {
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+#notch.charging {
+  border-color: rgba(74, 222, 128, 0.35);
+}

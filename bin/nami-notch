@@ -1,0 +1,368 @@
+#!/usr/bin/python3
+"""Nami Notch — a tiny stats notch with a Nami canvas pet.
+
+The webview draws the pet and the small stats pill.  This process owns the
+layer-shell surface, the input region and the Linux system readings.
+"""
+
+import fcntl
+import glob
+import json
+import os
+import sys
+import time
+import urllib.parse
+from pathlib import Path
+
+import cairo
+import gi
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+gi.require_version("GtkLayerShell", "0.1")
+gi.require_version("WebKit2", "4.1")
+from gi.repository import Gdk, GLib, Gtk, GtkLayerShell, WebKit2  # noqa: E402
+
+DATA_HOME = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share")
+CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
+APP_DIR = DATA_HOME / "nami-notch"
+WEB_DIR = APP_DIR / "web"
+CONFIG_DIR = CONFIG_HOME / "nami-notch"
+CONFIG = CONFIG_DIR / "settings.json"
+LOG = APP_DIR / "nami.log"
+
+WINDOW_W = 640
+WINDOW_H = 180
+COMPACT_W = 300
+COMPACT_H = 30
+TRIGGER_W = 300
+TRIGGER_H = 30
+
+
+def log(message):
+    try:
+        APP_DIR.mkdir(parents=True, exist_ok=True)
+        with LOG.open("a") as fh:
+            fh.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {message}\n")
+    except OSError:
+        pass
+
+
+def read_text(path):
+    try:
+        return Path(path).read_text().strip()
+    except OSError:
+        return ""
+
+
+def cpu_sample():
+    line = read_text("/proc/stat").splitlines()[0]
+    fields = [int(x) for x in line.split()[1:9]]
+    idle = fields[3] + fields[4]
+    return sum(fields), idle
+
+
+def cpu_percent(prev, cur):
+    if not prev:
+        return None
+    dt = cur[0] - prev[0]
+    di = cur[1] - prev[1]
+    if dt <= 0:
+        return None
+    return max(0.0, min(100.0, 100.0 * (dt - di) / dt))
+
+
+def mem_used():
+    info = {}
+    for line in read_text("/proc/meminfo").splitlines():
+        key, _, rest = line.partition(":")
+        try:
+            info[key] = int(rest.split()[0])
+        except (ValueError, IndexError):
+            pass
+    total = info.get("MemTotal", 0)
+    avail = info.get("MemAvailable", info.get("MemFree", 0))
+    used = max(0, total - avail)
+    pct = 100.0 * used / total if total else 0.0
+    return used / 1024 / 1024, pct
+
+
+def cpu_temp():
+    values = []
+    for hw in glob.glob("/sys/class/hwmon/hwmon*"):
+        name = read_text(os.path.join(hw, "name")).lower()
+        if not any(x in name for x in ("k10temp", "coretemp", "zenpower", "cpu")):
+            continue
+        for f in glob.glob(os.path.join(hw, "temp*_input")):
+            try:
+                values.append(int(read_text(f)) / 1000.0)
+            except ValueError:
+                pass
+    if not values:
+        for zone in glob.glob("/sys/class/thermal/thermal_zone*"):
+            kind = read_text(os.path.join(zone, "type")).lower()
+            if "cpu" not in kind and "x86" not in kind:
+                continue
+            try:
+                values.append(int(read_text(os.path.join(zone, "temp"))) / 1000.0)
+            except ValueError:
+                pass
+    return max(values) if values else None
+
+
+def battery_status():
+    for bat in sorted(glob.glob("/sys/class/power_supply/BAT*")):
+        cap = read_text(os.path.join(bat, "capacity"))
+        if not cap:
+            continue
+        try:
+            percent = int(cap)
+        except ValueError:
+            continue
+        status = read_text(os.path.join(bat, "status")).lower()
+        online = read_text(os.path.join(bat, "online"))
+        charging = status.startswith("charg") or (online == "1" and percent < 100)
+        return percent, charging
+    return None, False
+
+
+def load_settings():
+    try:
+        data = json.loads(CONFIG.read_text())
+        if not isinstance(data, dict):
+            return {}
+        return data
+    except (OSError, ValueError):
+        return {}
+
+
+def save_settings(data):
+    try:
+        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        tmp = CONFIG.with_suffix(".tmp")
+        tmp.write_text(json.dumps(data, indent=2) + "\n")
+        tmp.replace(CONFIG)
+    except OSError as exc:
+        log(f"settings save failed: {exc}")
+
+
+class NamiNotch(Gtk.Window):
+    def __init__(self):
+        super().__init__(type=Gtk.WindowType.TOPLEVEL)
+        self.set_decorated(False)
+        self.set_resizable(False)
+        self.set_skip_taskbar_hint(True)
+        self.set_skip_pager_hint(True)
+        self.set_accept_focus(False)
+        self.set_focus_on_map(False)
+        self.set_app_paintable(True)
+        self.set_default_size(WINDOW_W, WINDOW_H)
+        self.set_size_request(WINDOW_W, WINDOW_H)
+
+        screen = self.get_screen()
+        visual = screen.get_rgba_visual()
+        if visual is not None:
+            self.set_visual(visual)
+
+        GtkLayerShell.init_for_window(self)
+        GtkLayerShell.set_namespace(self, "nami-notch")
+        GtkLayerShell.set_layer(self, GtkLayerShell.Layer.OVERLAY)
+        GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.TOP, True)
+        GtkLayerShell.set_margin(self, GtkLayerShell.Edge.TOP, 0)
+        GtkLayerShell.set_exclusive_zone(self, 0)
+        GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.NONE)
+
+        self.webview = WebKit2.WebView()
+        self.webview.set_size_request(WINDOW_W, WINDOW_H)
+        self.webview.set_background_color(Gdk.RGBA(0, 0, 0, 0))
+        settings = self.webview.get_settings()
+        settings.set_enable_developer_extras(False)
+        settings.set_enable_media(False)
+        settings.set_enable_webaudio(False)
+        settings.set_enable_webgl(False)
+        self.add(self.webview)
+
+        manager = self.webview.get_user_content_manager()
+        manager.register_script_message_handler("nami")
+        manager.connect("script-message-received::nami", self.on_message)
+
+        self.connect("realize", self.apply_region)
+        self.connect("map", self.apply_region)
+        self.connect("size-allocate", self.apply_region)
+        self.connect("enter-notify-event", self.on_enter)
+        self.connect("leave-notify-event", self.on_leave)
+        self.connect("motion-notify-event", self.on_motion)
+
+        self.region = (
+            (WINDOW_W - TRIGGER_W) // 2,
+            0,
+            TRIGGER_W,
+            TRIGGER_H,
+        )
+        self.prev_cpu = None
+        self.cpu_value = None
+        self.ram_text = "--G"
+        self.ram_pct = None
+        self.temp_value = None
+        self.battery_value = None
+        self.charging = False
+        self.demo = os.environ.get("NAMI_DEMO", "").strip().lower()
+        self.tick = 0
+        self.loaded = False
+
+        initial = load_settings()
+        query = urllib.parse.urlencode(
+            {
+                "model": initial.get("model", "nami"),
+                "outfit": initial.get("outfit", "auto"),
+            }
+        )
+        uri = (WEB_DIR / "index.html").as_uri() + "?" + query
+        self.webview.connect("load-changed", self.on_load_changed)
+        self.webview.load_uri(uri)
+
+        self.show_all()
+        self.apply_region()
+        GLib.timeout_add(1000, self.update)
+
+    def on_load_changed(self, _webview, event):
+        if event == WebKit2.LoadEvent.FINISHED:
+            self.loaded = True
+            self.push_vitals()
+            log("page loaded")
+
+    def apply_region(self, *_):
+        window = self.get_window()
+        if window is None:
+            return
+        x, y, w, h = self.region
+        x = max(0, min(WINDOW_W - 1, int(x)))
+        y = max(0, min(WINDOW_H - 1, int(y)))
+        w = max(1, min(WINDOW_W - x, int(w)))
+        h = max(1, min(WINDOW_H - y, int(h)))
+        region = cairo.Region(cairo.RectangleInt(x, y, w, h))
+        window.input_shape_combine_region(region, 0, 0)
+        layer_set = getattr(GtkLayerShell, "set_input_region", None)
+        if layer_set is not None:
+            try:
+                layer_set(self, region)
+            except TypeError:
+                pass
+
+    def set_region(self, x, y, w, h):
+        if w < 1 or h < 1:
+            return
+        next_region = (int(x), int(y), int(w), int(h))
+        if next_region != self.region:
+            log(f"region {next_region}")
+        self.region = next_region
+        self.apply_region()
+
+    def on_message(self, _manager, result):
+        try:
+            raw = result.get_js_value().to_string()
+            payload = json.loads(raw)
+            if isinstance(payload, str):
+                payload = json.loads(payload)
+        except Exception as exc:
+            log(f"message parse failed: {exc}")
+            return
+        if not isinstance(payload, dict):
+            log(f"message is not an object: {payload!r}")
+            return
+        kind = payload.get("type")
+        if kind == "region":
+            self.set_region(
+                payload.get("x", self.region[0]),
+                payload.get("y", self.region[1]),
+                payload.get("w", self.region[2]),
+                payload.get("h", self.region[3]),
+            )
+        elif kind == "settings":
+            model = payload.get("model", "nami")
+            outfit = payload.get("outfit", "auto")
+            save_settings({"model": str(model), "outfit": str(outfit)})
+        else:
+            log(f"unknown message: {payload}")
+
+    def on_enter(self, *_):
+        if self.loaded:
+            self.webview.run_javascript("window.setHover(true);", None, None, None)
+        return False
+
+    def on_leave(self, *_):
+        if self.loaded:
+            self.webview.run_javascript("window.setHover(false);", None, None, None)
+        return False
+
+    def on_motion(self, *_):
+        if self.loaded and self.region[2] == TRIGGER_W and self.region[3] == TRIGGER_H:
+            self.webview.run_javascript("window.setHover(true);", None, None, None)
+        return False
+
+    def push_vitals(self):
+        payload = {
+            "cpu": self.cpu_value,
+            "ram": self.ram_text,
+            "ramPct": self.ram_pct,
+            "temp": self.temp_value,
+            "battery": self.battery_value,
+            "charging": self.charging,
+        }
+        script = "window.setVitals(%s);" % json.dumps(payload, separators=(",", ":"))
+        try:
+            self.webview.run_javascript(script, None, None, None)
+        except Exception as exc:
+            log(f"vitals push failed: {exc}")
+
+    def update(self):
+        self.tick += 1
+        if self.tick % 2 == 1:
+            self.push_vitals()
+
+        if self.tick % 2 == 0:
+            sample = cpu_sample()
+            pct = cpu_percent(self.prev_cpu, sample)
+            self.prev_cpu = sample
+            if pct is not None:
+                self.cpu_value = round(pct)
+            used, self.ram_pct = mem_used()
+            self.ram_text = f"{used:.1f}G"
+            self.temp_value = cpu_temp()
+
+        if self.tick % 3 == 1:
+            percent, charging = battery_status()
+            if self.demo == "low":
+                percent, charging = 8, False
+            elif self.demo == "charging":
+                percent, charging = 42, True
+            elif self.demo == "full":
+                percent, charging = 100, False
+            self.battery_value = percent
+            self.charging = charging
+
+        return True
+
+
+def main():
+    runtime = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+    lock_path = os.path.join(runtime, "nami-notch.lock")
+    lock = open(lock_path, "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        log("already running")
+        return 0
+
+    if not (WEB_DIR / "index.html").exists():
+        log(f"missing web assets at {WEB_DIR}")
+        return 1
+
+    app = NamiNotch()
+    app.connect("destroy", Gtk.main_quit)
+    Gtk.main()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
