@@ -16,6 +16,7 @@ Nami hides at the top center of your screen until you hover it. Hovering reveals
 - Outfits including bows, bunny ears, and party hats.
 - Hidden top-center trigger with compact and full-card modes.
 - Heart eyes and floating hearts while charging.
+- Green charging bolt whenever the AC adapter is connected, including when the battery is full or reports "Not charging".
 - Three-second angry alert when the charger is disconnected.
 - Persistent red low-battery warning.
 - Low-power and idle animations, dancing, eye tracking, outfits, and particles.

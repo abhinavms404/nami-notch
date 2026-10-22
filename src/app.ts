@@ -27,6 +27,7 @@ interface Vitals {
   temp: number | null;
   battery: number | null;
   charging: boolean;
+  plugged: boolean;
 }
 
 interface Model {
@@ -75,7 +76,7 @@ let modelId = MODELS.some((m) => m.id === params.get("model"))
     ? (stored.model as string)
     : "nami";
 let outfitSelection = parseOutfit(params.get("outfit") ?? stored.outfit);
-let vitals: Vitals = { cpu: null, ram: "--G", ramPct: null, temp: null, battery: null, charging: false };
+let vitals: Vitals = { cpu: null, ram: "--G", ramPct: null, temp: null, battery: null, charging: false, plugged: false };
 let expanded = false;
 let visible = false;
 let hovered = false;
@@ -86,6 +87,7 @@ const TRIGGER_W = 300;
 const TRIGGER_H = 30;
 let wasLow = false;
 let wasCharging = false;
+let wasPlugged = false;
 let petSize = 0;
 let currentMove: MoveName | null = null;
 let moveUntil = 0;
@@ -280,12 +282,13 @@ function applyVitals(): void {
   batEl.classList.toggle("crit", vitals.battery !== null && vitals.battery <= 8);
   bigBat.classList.toggle("warn", vitals.battery !== null && vitals.battery <= 20);
   bigBat.classList.toggle("crit", vitals.battery !== null && vitals.battery <= 8);
-  notch.classList.toggle("charging", vitals.charging);
-  bolt.classList.toggle("on", vitals.charging);
-
+  const plugged = vitals.charging || vitals.plugged;
   const low = isLow();
+  notch.classList.toggle("charging", plugged && !low);
+  bolt.classList.toggle("on", plugged);
+
   const justCharging = vitals.charging && !wasCharging;
-  const justDisconnected = !vitals.charging && wasCharging;
+  const justDisconnected = !plugged && wasPlugged;
 
   if (justCharging) {
     disconnectUntil = 0;
@@ -305,6 +308,7 @@ function applyVitals(): void {
 
   wasLow = low;
   wasCharging = vitals.charging;
+  wasPlugged = plugged;
   notch.classList.toggle("low", low || disconnectUntil > performance.now());
   updateStatus();
   setStateForBattery();
@@ -322,6 +326,9 @@ function updateStatus(): void {
   } else if (isLow()) {
     statusEl.textContent = "Charge it now";
     statusEl.className = "status low";
+  } else if (vitals.plugged) {
+    statusEl.textContent = "Plugged in";
+    statusEl.className = "status charging";
   } else {
     statusEl.textContent = "";
     statusEl.className = "status";

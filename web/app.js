@@ -3844,7 +3844,8 @@ var vitals = {
   ramPct: null,
   temp: null,
   battery: null,
-  charging: false
+  charging: false,
+  plugged: false
 };
 var expanded = false;
 var visible = false;
@@ -3856,6 +3857,7 @@ var TRIGGER_W = 300;
 var TRIGGER_H = 30;
 var wasLow = false;
 var wasCharging = false;
+var wasPlugged = false;
 var petSize = 0;
 var currentMove = null;
 var moveUntil = 0;
@@ -4039,11 +4041,12 @@ function applyVitals() {
   batEl.classList.toggle("crit", vitals.battery !== null && vitals.battery <= 8);
   bigBat.classList.toggle("warn", vitals.battery !== null && vitals.battery <= 20);
   bigBat.classList.toggle("crit", vitals.battery !== null && vitals.battery <= 8);
-  notch.classList.toggle("charging", vitals.charging);
-  bolt.classList.toggle("on", vitals.charging);
+  const plugged = vitals.charging || vitals.plugged;
   const low = isLow();
+  notch.classList.toggle("charging", plugged && !low);
+  bolt.classList.toggle("on", plugged);
   const justCharging = vitals.charging && !wasCharging;
-  const justDisconnected = !vitals.charging && wasCharging;
+  const justDisconnected = !plugged && wasPlugged;
   if (justCharging) {
     disconnectUntil = 0;
     cancelMove();
@@ -4061,6 +4064,7 @@ function applyVitals() {
   if (low && !wasLow && !justDisconnected) triggerLowAlert();
   wasLow = low;
   wasCharging = vitals.charging;
+  wasPlugged = plugged;
   notch.classList.toggle("low", low || disconnectUntil > performance.now());
   updateStatus();
   setStateForBattery();
@@ -4077,6 +4081,9 @@ function updateStatus() {
   } else if (isLow()) {
     statusEl.textContent = "Charge it now";
     statusEl.className = "status low";
+  } else if (vitals.plugged) {
+    statusEl.textContent = "Plugged in";
+    statusEl.className = "status charging";
   } else {
     statusEl.textContent = "";
     statusEl.className = "status";

@@ -110,6 +110,15 @@ def cpu_temp():
     return max(values) if values else None
 
 
+def mains_online():
+    for node in glob.glob("/sys/class/power_supply/*"):
+        if read_text(os.path.join(node, "type")).lower() != "mains":
+            continue
+        if read_text(os.path.join(node, "online")) == "1":
+            return True
+    return False
+
+
 def battery_status():
     for bat in sorted(glob.glob("/sys/class/power_supply/BAT*")):
         cap = read_text(os.path.join(bat, "capacity"))
@@ -121,9 +130,10 @@ def battery_status():
             continue
         status = read_text(os.path.join(bat, "status")).lower()
         online = read_text(os.path.join(bat, "online"))
-        charging = status.startswith("charg") or (online == "1" and percent < 100)
-        return percent, charging
-    return None, False
+        charging = status.startswith("charg")
+        plugged = charging or online == "1" or mains_online()
+        return percent, charging, plugged
+    return None, False, False
 
 
 def load_settings():
@@ -206,6 +216,7 @@ class NamiNotch(Gtk.Window):
         self.temp_value = None
         self.battery_value = None
         self.charging = False
+        self.plugged = False
         self.demo = os.environ.get("NAMI_DEMO", "").strip().lower()
         self.tick = 0
         self.loaded = False
@@ -308,6 +319,7 @@ class NamiNotch(Gtk.Window):
             "temp": self.temp_value,
             "battery": self.battery_value,
             "charging": self.charging,
+            "plugged": self.plugged,
         }
         script = "window.setVitals(%s);" % json.dumps(payload, separators=(",", ":"))
         try:
@@ -331,15 +343,16 @@ class NamiNotch(Gtk.Window):
             self.temp_value = cpu_temp()
 
         if self.tick % 3 == 1:
-            percent, charging = battery_status()
+            percent, charging, plugged = battery_status()
             if self.demo == "low":
-                percent, charging = 8, False
+                percent, charging, plugged = 8, False, False
             elif self.demo == "charging":
-                percent, charging = 42, True
+                percent, charging, plugged = 42, True, True
             elif self.demo == "full":
-                percent, charging = 100, False
+                percent, charging, plugged = 100, False, True
             self.battery_value = percent
             self.charging = charging
+            self.plugged = plugged
 
         return True
 
