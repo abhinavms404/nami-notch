@@ -88,6 +88,7 @@ const TRIGGER_H = 30;
 let wasLow = false;
 let wasCharging = false;
 let wasPlugged = false;
+let sawVitals = false;
 let petSize = 0;
 let currentMove: MoveName | null = null;
 let moveUntil = 0;
@@ -288,6 +289,7 @@ function applyVitals(): void {
   bolt.classList.toggle("on", plugged);
 
   const justCharging = vitals.charging && !wasCharging;
+  const justPlugged = sawVitals && plugged && !wasPlugged;
   const justDisconnected = !plugged && wasPlugged;
 
   if (justCharging) {
@@ -302,6 +304,18 @@ function applyVitals(): void {
     }, 3000);
     setVisible(true);
     engine.triggerEmote("love", 1.2);
+  } else if (justPlugged) {
+    disconnectUntil = 0;
+    cancelMove();
+    forcedOpen = true;
+    if (forceTimer !== null) window.clearTimeout(forceTimer);
+    forceTimer = window.setTimeout(() => {
+      forceTimer = null;
+      forcedOpen = false;
+      setVisible(false);
+    }, 3000);
+    setVisible(true);
+    engine.triggerEmote("happy", 1.2);
   }
   if (justDisconnected) triggerDisconnectAlert();
   if (low && !wasLow && !justDisconnected) triggerLowAlert();
@@ -309,6 +323,7 @@ function applyVitals(): void {
   wasLow = low;
   wasCharging = vitals.charging;
   wasPlugged = plugged;
+  sawVitals = true;
   notch.classList.toggle("low", low || disconnectUntil > performance.now());
   updateStatus();
   setStateForBattery();
