@@ -148,11 +148,12 @@ body {
 }
 
 #notch.clock-only #compact {
-  padding: 0 8px;
+  padding: 0 12px;
 }
 
 #notch.clock-only #clock {
   min-width: 0;
+  flex: 0 0 auto;
   font-size: 13px;
   letter-spacing: 0.2px;
 }

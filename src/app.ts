@@ -157,7 +157,8 @@ function applyOutfit(animated = true): void {
 }
 
 function syncNotchWidth(): void {
-  const next = compactMode === "clock" && !expanded ? `${Math.ceil(clock.scrollWidth + 16)}px` : "";
+  const next =
+    compactMode === "clock" && !expanded ? `${Math.max(88, Math.ceil(clock.scrollWidth + 24))}px` : "";
   if (notch.style.width === next) return;
   notch.style.width = next;
   publishRegion();
