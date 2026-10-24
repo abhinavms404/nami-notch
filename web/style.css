@@ -141,6 +141,18 @@ body {
   opacity: 1;
 }
 
+#notch.clock-only #compact .sep,
+#notch.clock-only #compact .metric,
+#notch.clock-only #compact .bolt {
+  display: none;
+}
+
+#notch.clock-only #clock {
+  min-width: 0;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+}
+
 #content {
   position: absolute;
   inset: 0;
@@ -288,6 +300,54 @@ body {
   color: rgba(255, 255, 255, 0.65);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.micro-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.micro-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  outline: 0;
+  color: rgba(255, 255, 255, 0.38);
+  background: transparent;
+  font: inherit;
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.micro-toggle .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f87171;
+  box-shadow: 0 0 7px rgba(248, 113, 113, 0.35);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.micro-toggle[aria-pressed="true"] .dot {
+  background: #4ade80;
+  box-shadow: 0 0 7px rgba(74, 222, 128, 0.4);
+}
+
+.micro-toggle:hover {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.micro-toggle:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.35);
+  outline-offset: 2px;
 }
 
 #notch.low {

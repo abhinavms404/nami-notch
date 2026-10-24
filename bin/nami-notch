@@ -222,12 +222,15 @@ class NamiNotch(Gtk.Window):
         self.loaded = False
 
         initial = load_settings()
-        query = urllib.parse.urlencode(
-            {
-                "model": initial.get("model", "nami"),
-                "outfit": initial.get("outfit", "auto"),
-            }
-        )
+        query_data = {
+            "model": initial.get("model", "nami"),
+            "outfit": initial.get("outfit", "auto"),
+        }
+        if initial.get("compact") in ("stats", "clock"):
+            query_data["compact"] = initial["compact"]
+        if initial.get("pinned") is not None:
+            query_data["pinned"] = "1" if initial.get("pinned") is True else "0"
+        query = urllib.parse.urlencode(query_data)
         uri = (WEB_DIR / "index.html").as_uri() + "?" + query
         self.webview.connect("load-changed", self.on_load_changed)
         self.webview.load_uri(uri)
@@ -292,7 +295,16 @@ class NamiNotch(Gtk.Window):
         elif kind == "settings":
             model = payload.get("model", "nami")
             outfit = payload.get("outfit", "auto")
-            save_settings({"model": str(model), "outfit": str(outfit)})
+            compact = "clock" if payload.get("compact") == "clock" else "stats"
+            pinned = payload.get("pinned") is True
+            save_settings(
+                {
+                    "model": str(model),
+                    "outfit": str(outfit),
+                    "compact": compact,
+                    "pinned": pinned,
+                }
+            )
         else:
             log(f"unknown message: {payload}")
 

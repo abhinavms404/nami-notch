@@ -3838,6 +3838,9 @@ var stored = (() => {
 })();
 var modelId = MODELS.some((m) => m.id === params.get("model")) ? params.get("model") : MODELS.some((m) => m.id === stored.model) ? stored.model : "nami";
 var outfitSelection = parseOutfit(params.get("outfit") ?? stored.outfit);
+var compactParam = params.get("compact");
+var compactMode = compactParam === "clock" || compactParam === "stats" ? compactParam : stored.compact === "clock" ? "clock" : "stats";
+var pinned = params.has("pinned") ? params.get("pinned") === "1" : stored.pinned === true;
 var vitals = {
   cpu: null,
   ram: "--G",
@@ -3885,6 +3888,8 @@ var outfitLabel = document.getElementById("outfit-label");
 var outfitPrev = document.getElementById("outfit-prev");
 var outfitNext = document.getElementById("outfit-next");
 var bolt = document.getElementById("bolt");
+var timeToggle = document.getElementById("time-toggle");
+var pinToggle = document.getElementById("pin-toggle");
 var ctx = pet.getContext("2d");
 var engine = new BotEngine();
 engine.isMini = false;
@@ -3906,10 +3911,25 @@ function applyOutfit(animated = true) {
   engine.setOutfit(outfit, animated);
   outfitLabel.textContent = outfitSelection === "auto" ? `Auto: ${OUTFIT_LABELS[outfit]}` : OUTFIT_LABELS[outfitSelection];
 }
+function applyCompactMode() {
+  const clockOnly = compactMode === "clock";
+  notch.classList.toggle("clock-only", clockOnly);
+  timeToggle.setAttribute("aria-pressed", String(clockOnly));
+  timeToggle.setAttribute("aria-label", clockOnly ? "Switch compact notch to stats" : "Switch compact notch to time only");
+  timeToggle.title = clockOnly ? "Compact notch: time only" : "Compact notch: stats";
+}
+function applyPin() {
+  notch.classList.toggle("pinned", pinned);
+  pinToggle.setAttribute("aria-pressed", String(pinned));
+  pinToggle.setAttribute("aria-label", pinned ? "Allow notch to auto-hide" : "Keep notch visible");
+  pinToggle.title = pinned ? "Notch stays visible" : "Notch auto-hides";
+}
 function save() {
   const data = {
     model: modelId,
-    outfit: outfitSelection
+    outfit: outfitSelection,
+    compact: compactMode,
+    pinned
   };
   try {
     localStorage.setItem("nami-notch", JSON.stringify(data));
@@ -4057,7 +4077,7 @@ function applyVitals() {
     forceTimer = window.setTimeout(() => {
       forceTimer = null;
       forcedOpen = false;
-      setVisible(false);
+      collapseOrHide();
     }, 3e3);
     setVisible(true);
     engine.triggerEmote("love", 1.2);
@@ -4069,7 +4089,7 @@ function applyVitals() {
     forceTimer = window.setTimeout(() => {
       forceTimer = null;
       forcedOpen = false;
-      setVisible(false);
+      collapseOrHide();
     }, 3e3);
     setVisible(true);
     engine.triggerEmote("happy", 1.2);
@@ -4126,7 +4146,7 @@ function triggerDisconnectAlert() {
       triggerLowAlert();
     } else {
       notch.classList.remove("low");
-      setVisible(false);
+      collapseOrHide();
       setStateForBattery();
       updateStatus();
     }
@@ -4148,6 +4168,14 @@ function triggerLowAlert() {
   notch.classList.add("low");
   updateStatus();
 }
+function collapseOrHide() {
+  if (pinned) {
+    setExpanded(false);
+    updateStatus();
+  } else {
+    setVisible(false);
+  }
+}
 function setVisible(on, expand = true) {
   visible = on;
   notch.classList.toggle("visible", on);
@@ -4168,7 +4196,11 @@ function setHoverState(on) {
   if (on) {
     if (!visible) setVisible(true, false);
   } else if (!forcedOpen) {
-    setVisible(false);
+    if (pinned) {
+      setExpanded(false);
+    } else {
+      setVisible(false);
+    }
   }
 }
 function setExpanded(on) {
@@ -4336,6 +4368,21 @@ outfitNext.addEventListener("click", (event) => {
   event.stopPropagation();
   cycleOutfit(1);
 });
+timeToggle.addEventListener("click", (event) => {
+  event.stopPropagation();
+  compactMode = compactMode === "clock" ? "stats" : "clock";
+  applyCompactMode();
+  save();
+  engine.squash();
+});
+pinToggle.addEventListener("click", (event) => {
+  event.stopPropagation();
+  pinned = !pinned;
+  applyPin();
+  save();
+  if (!pinned && !hovered && !forcedOpen) setVisible(false);
+  engine.squash();
+});
 pet.title = "Click Nami for a move \u2014 move your cursor to make her follow it";
 pet.addEventListener("click", (event) => {
   event.stopPropagation();
@@ -4358,6 +4405,8 @@ window.setHover = (on) => {
 modelButtons();
 applyModel();
 applyOutfit(false);
+applyCompactMode();
+applyPin();
 setStateForBattery();
 petSize = 88;
 pet.style.width = "88px";
@@ -4366,6 +4415,7 @@ pet.width = Math.round(88 * Math.min(2, window.devicePixelRatio || 1));
 pet.height = Math.round(88 * Math.min(2, window.devicePixelRatio || 1));
 bigPetSlot.appendChild(pet);
 tickClock();
+if (pinned) setVisible(true, false);
 publishRegion();
 window.setInterval(() => {
   if (expanded && wasCharging) {
