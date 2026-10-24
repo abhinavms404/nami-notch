@@ -31,25 +31,33 @@ Nami hides at the top center of your screen until you hover it. Hovering reveals
 ### Compact notch
 
 <p align="center">
-  <img src="docs/compact.png" alt="Compact Nami Notch stats pill" width="640">
+  <img src="docs/compact.gif" alt="Animated compact Nami Notch stats pill updating live CPU, RAM, temperature and battery" width="640">
+</p>
+
+### Time-only notch
+
+With **TIME** and **PIN** both on, the notch shrinks to a tiny clock. Hovering shows the compact stats pill; moving away returns to the tiny clock.
+
+<p align="center">
+  <img src="docs/time-notch.gif" alt="Animated time-only Nami Notch showing a tiny clock and expanding to compact stats on hover" width="640">
 </p>
 
 ### Charging
 
 <p align="center">
-  <img src="docs/charging.png" alt="Nami Notch charging with heart eyes, floating hearts and a green charging status" width="640">
+  <img src="docs/charging.gif" alt="Animated Nami Notch charging with heart eyes, floating hearts and a green charging status" width="640">
 </p>
 
 ### Charger disconnected
 
 <p align="center">
-  <img src="docs/disconnect.png" alt="Nami Notch angry red disconnect alert with the message Charger disconnected" width="640">
+  <img src="docs/disconnect.gif" alt="Animated Nami Notch angry red disconnect alert with the message Charger disconnected" width="640">
 </p>
 
 ### Low battery
 
 <p align="center">
-  <img src="docs/low-battery.png" alt="Nami Notch angry low battery warning at 8 percent with the message Charge it now" width="640">
+  <img src="docs/low-battery.gif" alt="Animated Nami Notch angry low battery warning at 8 percent with the message Charge it now" width="640">
 </p>
 
 ### More models
@@ -58,7 +66,7 @@ Choose any species from the dots in the notch. A few of them:
 
 | Puppy | Fox | Panda |
 | :---: | :---: | :---: |
-| <img src="docs/model-puppy.png" width="190" alt="Puppy model wearing a bow"> | <img src="docs/model-fox.png" width="190" alt="Fox model wearing a bow"> | <img src="docs/model-panda.png" width="190" alt="Panda model wearing a bow"> |
+| <img src="docs/model-puppy.gif" width="190" alt="Animated Puppy model wearing a bow and waving"> | <img src="docs/model-fox.gif" width="190" alt="Animated Fox model wearing a bow and waving"> | <img src="docs/model-panda.gif" width="190" alt="Animated Panda model wearing a bow and waving"> |
 
 ## Requirements
 

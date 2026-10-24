@@ -105,7 +105,7 @@ cp -a "$REPO_DIR/src/." "$APP_DIR/src/"
 install -m 0755 "$REPO_DIR/bin/nami-notch" "$BIN"
 
 if [[ ! -f "$CONFIG_DIR/settings.json" ]]; then
-  printf '{\n  "model": "nami",\n  "outfit": "auto"\n}\n' > "$CONFIG_DIR/settings.json"
+  printf '{\n  "model": "nami",\n  "outfit": "auto",\n  "compact": "stats",\n  "pinned": false\n}\n' > "$CONFIG_DIR/settings.json"
 fi
 
 if [[ "$AUTOSTART" -eq 1 ]]; then
