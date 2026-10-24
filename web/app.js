@@ -4238,11 +4238,9 @@ function cycleOutfit(direction) {
 }
 function tickClock() {
   const now2 = /* @__PURE__ */ new Date();
-  const time = now2.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  });
+  const hours = now2.getHours();
+  const minutes = String(now2.getMinutes()).padStart(2, "0");
+  const time = `${hours % 12 || 12}:${minutes} ${hours >= 12 ? "PM" : "AM"}`;
   const date = now2.toLocaleDateString([], {
     weekday: "short",
     month: "short",

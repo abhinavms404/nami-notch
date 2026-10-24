@@ -491,7 +491,9 @@ function cycleOutfit(direction: number): void {
 
 function tickClock(): void {
   const now = new Date();
-  const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  const hours = now.getHours();
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const time = `${hours % 12 || 12}:${minutes} ${hours >= 12 ? "PM" : "AM"}`;
   const date = now.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
   clock.textContent = time;
   dateEl.textContent = `${date} · ${time}`;
