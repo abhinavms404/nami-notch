@@ -5,7 +5,7 @@ A tiny Wayland/Hyprland notch with live system stats and an interactive canvas p
 Nami hides at the top center of your screen until you hover it. Hovering reveals a compact stats pill; double-clicking the pill opens the full card with the pet, CPU, RAM, temperature, battery, model selector, and outfit controls.
 
 <p align="center">
-  <img src="docs/hero.png" alt="Expanded Nami Notch card showing the penguin pet, live CPU, RAM, temperature and battery stats, species selector and outfit controls" width="640">
+  <img src="docs/hero.gif" alt="Animated Nami Notch card with the penguin waving its hands beside live CPU, RAM, temperature and battery stats" width="640">
 </p>
 
 ## Features
