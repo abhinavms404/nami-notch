@@ -147,6 +147,10 @@ body {
   display: none;
 }
 
+#notch.clock-only #compact {
+  padding: 0 8px;
+}
+
 #notch.clock-only #clock {
   min-width: 0;
   font-size: 13px;

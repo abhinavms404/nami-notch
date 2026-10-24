@@ -3911,9 +3911,17 @@ function applyOutfit(animated = true) {
   engine.setOutfit(outfit, animated);
   outfitLabel.textContent = outfitSelection === "auto" ? `Auto: ${OUTFIT_LABELS[outfit]}` : OUTFIT_LABELS[outfitSelection];
 }
+function syncNotchWidth() {
+  const next = compactMode === "clock" && !expanded ? `${Math.ceil(clock.scrollWidth + 16)}px` : "";
+  if (notch.style.width === next) return;
+  notch.style.width = next;
+  publishRegion();
+  if (visible) window.setTimeout(publishRegion, 300);
+}
 function applyCompactMode() {
   const clockOnly = compactMode === "clock";
   notch.classList.toggle("clock-only", clockOnly);
+  syncNotchWidth();
   timeToggle.setAttribute("aria-pressed", String(clockOnly));
   timeToggle.setAttribute("aria-label", clockOnly ? "Switch compact notch to stats" : "Switch compact notch to time only");
   timeToggle.title = clockOnly ? "Compact notch: time only" : "Compact notch: stats";
@@ -4207,6 +4215,7 @@ function setExpanded(on) {
   if (expanded === on) return;
   expanded = on;
   notch.classList.toggle("expanded", on);
+  syncNotchWidth();
   const size = 88;
   if (petSize !== size) {
     petSize = size;
@@ -4280,6 +4289,7 @@ function tickClock() {
   });
   clock.textContent = time;
   dateEl.textContent = `${date} \xB7 ${time}`;
+  syncNotchWidth();
   window.setTimeout(tickClock, 1e3);
 }
 var lastFrame = performance.now();
