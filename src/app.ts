@@ -87,6 +87,7 @@ let compactMode: CompactMode =
       ? "clock"
       : "stats";
 let pinned = params.has("pinned") ? params.get("pinned") === "1" : stored.pinned === true;
+let statsPeek = false;
 let vitals: Vitals = { cpu: null, ram: "--G", ramPct: null, temp: null, battery: null, charging: false, plugged: false };
 let expanded = false;
 let visible = false;
@@ -158,7 +159,9 @@ function applyOutfit(animated = true): void {
 
 function syncNotchWidth(): void {
   const next =
-    compactMode === "clock" && !expanded ? `${Math.max(88, Math.ceil(clock.scrollWidth + 24))}px` : "";
+    compactMode === "clock" && !expanded && !statsPeek
+      ? `${Math.max(88, Math.ceil(clock.scrollWidth + 24))}px`
+      : "";
   if (notch.style.width === next) return;
   notch.style.width = next;
   publishRegion();
@@ -167,7 +170,7 @@ function syncNotchWidth(): void {
 
 function applyCompactMode(): void {
   const clockOnly = compactMode === "clock";
-  notch.classList.toggle("clock-only", clockOnly);
+  notch.classList.toggle("clock-only", clockOnly && !statsPeek);
   syncNotchWidth();
   timeToggle.setAttribute("aria-pressed", String(clockOnly));
   timeToggle.setAttribute(
@@ -465,20 +468,24 @@ function setVisible(on: boolean, expand = true): void {
 function setHoverState(on: boolean): void {
   hovered = on;
   if (on) {
-    if (pinned && compactMode === "clock") {
-      if (!visible) {
-        setVisible(true, true);
-      } else {
-        setExpanded(true);
-      }
+    if (pinned && compactMode === "clock" && !expanded) {
+      if (!visible) setVisible(true, false);
+      statsPeek = true;
+      applyCompactMode();
     } else if (!visible) {
       setVisible(true, false);
     }
-  } else if (!forcedOpen) {
-    if (pinned) {
-      setExpanded(false);
-    } else {
-      setVisible(false);
+  } else {
+    if (statsPeek) {
+      statsPeek = false;
+      applyCompactMode();
+    }
+    if (!forcedOpen) {
+      if (pinned) {
+        if (expanded) setExpanded(false);
+      } else {
+        setVisible(false);
+      }
     }
   }
 }

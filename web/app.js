@@ -3841,6 +3841,7 @@ var outfitSelection = parseOutfit(params.get("outfit") ?? stored.outfit);
 var compactParam = params.get("compact");
 var compactMode = compactParam === "clock" || compactParam === "stats" ? compactParam : stored.compact === "clock" ? "clock" : "stats";
 var pinned = params.has("pinned") ? params.get("pinned") === "1" : stored.pinned === true;
+var statsPeek = false;
 var vitals = {
   cpu: null,
   ram: "--G",
@@ -3912,7 +3913,7 @@ function applyOutfit(animated = true) {
   outfitLabel.textContent = outfitSelection === "auto" ? `Auto: ${OUTFIT_LABELS[outfit]}` : OUTFIT_LABELS[outfitSelection];
 }
 function syncNotchWidth() {
-  const next = compactMode === "clock" && !expanded ? `${Math.max(88, Math.ceil(clock.scrollWidth + 24))}px` : "";
+  const next = compactMode === "clock" && !expanded && !statsPeek ? `${Math.max(88, Math.ceil(clock.scrollWidth + 24))}px` : "";
   if (notch.style.width === next) return;
   notch.style.width = next;
   publishRegion();
@@ -3920,7 +3921,7 @@ function syncNotchWidth() {
 }
 function applyCompactMode() {
   const clockOnly = compactMode === "clock";
-  notch.classList.toggle("clock-only", clockOnly);
+  notch.classList.toggle("clock-only", clockOnly && !statsPeek);
   syncNotchWidth();
   timeToggle.setAttribute("aria-pressed", String(clockOnly));
   timeToggle.setAttribute("aria-label", clockOnly ? "Switch compact notch to stats" : "Switch compact notch to time only");
@@ -4202,20 +4203,24 @@ function setVisible(on, expand = true) {
 function setHoverState(on) {
   hovered = on;
   if (on) {
-    if (pinned && compactMode === "clock") {
-      if (!visible) {
-        setVisible(true, true);
-      } else {
-        setExpanded(true);
-      }
+    if (pinned && compactMode === "clock" && !expanded) {
+      if (!visible) setVisible(true, false);
+      statsPeek = true;
+      applyCompactMode();
     } else if (!visible) {
       setVisible(true, false);
     }
-  } else if (!forcedOpen) {
-    if (pinned) {
-      setExpanded(false);
-    } else {
-      setVisible(false);
+  } else {
+    if (statsPeek) {
+      statsPeek = false;
+      applyCompactMode();
+    }
+    if (!forcedOpen) {
+      if (pinned) {
+        if (expanded) setExpanded(false);
+      } else {
+        setVisible(false);
+      }
     }
   }
 }
