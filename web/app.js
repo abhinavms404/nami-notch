@@ -4202,7 +4202,15 @@ function setVisible(on, expand = true) {
 function setHoverState(on) {
   hovered = on;
   if (on) {
-    if (!visible) setVisible(true, false);
+    if (pinned && compactMode === "clock") {
+      if (!visible) {
+        setVisible(true, true);
+      } else {
+        setExpanded(true);
+      }
+    } else if (!visible) {
+      setVisible(true, false);
+    }
   } else if (!forcedOpen) {
     if (pinned) {
       setExpanded(false);

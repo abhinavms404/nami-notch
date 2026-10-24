@@ -17,6 +17,7 @@ Nami hides at the top center of your screen until you hover it. Hovering reveals
 - Hidden top-center trigger with compact and full-card modes.
 - Two compact modes: live stats, or a time-only notch that shrinks to fit the clock.
 - Tiny green/red toggles in the full card for time-only compact mode and an always-visible notch.
+- With TIME and PIN both on, hovering the tiny clock opens the full card.
 - Heart eyes and floating hearts while charging.
 - Green charging bolt whenever the AC adapter is connected, including when the battery is full or reports "Not charging".
 - Three-second "Plugged in" card when the AC adapter is connected; heart eyes appear only while actively charging.
